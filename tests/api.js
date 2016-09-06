@@ -846,6 +846,35 @@ describe('Cloudant Search', function() {
   });
 });
 
+describe('Cloudant 429 retry', function() {
+  before(function(done) {
+    var mocks = nock(SERVER)
+      .put('/' + MYDB).reply(200, { "ok": true });
+
+    cc = Cloudant({account:ME, password:PASSWORD});
+    cc.db.create(MYDB, function(er, d) {
+      should(er).equal(null);
+      mydb = cc.db.use("mydb");
+      mocks.done();
+      done();
+    });
+  });
+
+  it('Returns an error for 429 by default', function(done) {
+    var mocks = nock(SERVER)
+      .get('/' + MYDB + '/foo')
+      .reply(429, {error:"too_many_requests",reason:"You\'ve exceeded your current limit of 2 requests per second for shared class. Please try later.",class:'shared',rate:2})
+
+    mydb.get("foo", function(er, data) {
+      should(er).equal(null);
+      data.should.be.an.Object;
+
+      mocks.done();
+      done();
+    });
+  });
+});
+
 describe('User Agent tests', function() {
   var server = null;
 
