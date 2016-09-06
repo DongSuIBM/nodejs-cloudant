@@ -16,6 +16,7 @@ module.exports = Cloudant;
 
 var Nano = require('nano');
 var debug = require('debug')('cloudant');
+var request = require('request');
 var nanodebug = require('debug')('nano');
 
 
