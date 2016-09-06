@@ -15,8 +15,8 @@ module.exports = Cloudant;
  */
 
 var Nano = require('nano');
-var debug = require('debug')('cloudant');
-var request = require('request');
+var debug = require('debug')('cloudant:main');
+var setRequestDefaults = require('./lib/request.js').defaults;
 var nanodebug = require('debug')('nano');
 
 
@@ -39,6 +39,7 @@ function Cloudant(credentials, callback) {
 
   var pkg = require('./package.json');
   var useragent = "nodejs-cloudant/" + pkg.version + " (Node.js " + process.version + ")";
+
   var requestDefaults = { headers: { "User-agent": useragent}, gzip:true  };
   if (typeof credentials == "object") {
     if (credentials.requestDefaults) {
@@ -55,10 +56,11 @@ function Cloudant(credentials, callback) {
     var protocol = (credentials.match(/^https/))? require('https') : require('http');
     var agent = new protocol.Agent({ keepAlive:true });
     requestDefaults.agent = agent;
-  } 
+  }
 
-  debug('Create underlying Nano instance, credentials=%j requestDefaults=%j', credentials, requestDefaults);
-  var nano = Nano({url:credentials, requestDefaults: requestDefaults, cookie: cookie, log: nanodebug});
+  var request = setRequestDefaults(requestDefaults);
+  debug('Create underlying Nano instance, credentials=%j', credentials);
+  var nano = Nano({url:credentials, request: request, cookie: cookie, log: nanodebug});
 
   // our own implementation of 'use' e.g. nano.use or nano.db.use
   // it includes all db-level functions
